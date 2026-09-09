@@ -1,0 +1,212 @@
+name: Node.js Multi Environment Deployment
+
+on:
+  push:
+    branches:
+      - Dev
+      - QA
+      - main
+      - feature-1
+
+jobs:
+
+  # =========================
+  # DEV DEPLOYMENT
+  # =========================
+  deploy-dev:
+    if: github.ref == 'refs/heads/Dev'
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Dev
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEV_EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.DEV_EC2_SSH_KEY }}
+
+          script: |
+            set -e
+
+            echo "Deploying to DEV..."
+
+            cd /home/ec2-user/node-cicd-demo/new-cicd-branch-demo
+
+            git fetch origin Dev
+            git reset --hard origin/Dev
+            git clean -fd
+            
+            echo "2. Checking deployed commit..."
+            git rev-parse HEAD
+            git log -1 --oneline
+
+            echo "3. Installing dependencies..."
+            npm install
+
+            echo "4. Restarting PM2 application..."
+
+            if pm2 describe node-cicd-demo > /dev/null 2>&1; then
+                APP_ENV=Dev pm2 restart node-cicd-demo --update-env
+            else
+                APP_ENV=Dev pm2 start node-cicd-demo --update-env
+            fi
+
+            pm2 save
+
+            echo "DEV deployment successful!"
+
+
+  # =========================
+  # QA DEPLOYMENT
+  # =========================
+  deploy-qa:
+    if: github.ref == 'refs/heads/QA'
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to QA
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.QA_EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.QA_EC2_SSH_KEY }}
+
+          script: |
+            set -e
+
+            echo "Deploying to QA..."
+
+            cd /home/ec2-user/node-cicd-demo/new-cicd-branch-demo
+
+            git fetch origin QA
+            git reset --hard origin/QA
+            git clean -fd
+
+            echo "2. Checking deployed commit..."
+            git rev-parse HEAD
+            git log -1 --oneline
+
+            echo "3. Installing dependencies..."
+            npm install
+
+            echo "4. Restarting PM2 application..."
+
+            if pm2 describe node-cicd-demo > /dev/null 2>&1; then
+                APP_ENV=QA pm2 restart node-cicd-demo --update-env
+            else
+                APP_ENV=QA pm2 start node-cicd-demo --update-env
+            fi
+
+
+            echo "QA deployment successful!"
+
+
+  # =========================
+  # PROD DEPLOYMENT
+  # =========================
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to PROD
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.PROD_EC2_SSH_KEY }}
+
+          script: |
+            set -e
+
+            echo "Deploying to PROD..."
+
+            cd /home/ec2-user/node-cicd-demo/new-cicd-branch-demo
+
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            echo "2. Checking deployed commit..."
+            git rev-parse HEAD
+            git log -1 --oneline
+
+            echo "3. Installing dependencies..."
+            npm install
+
+            echo "4. Restarting PM2 application..."
+
+            if pm2 describe node-cicd-demo > /dev/null 2>&1; then
+                APP_ENV=main pm2 restart node-cicd-demo --update-env
+            else
+                APP_ENV=main pm2 start node-cicd-demo --update-env
+            fi
+
+
+            echo "PRODUCTION deployment successful!"
+
+  # =========================
+  # feature-1 DEPLOYMENT
+  # =========================
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: feature-1
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to feature-1
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.FE1_EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.FE1_EC2_SSH_KEY }}
+
+          script: |
+            set -e
+
+            echo "Deploying to feature-1 ..."
+
+            cd /home/ec2-user/node-cicd-demo/new-cicd-branch-demo
+
+            git fetch origin feature-1
+            git reset --hard origin/feature-1
+            git clean -fd
+
+            echo "2. Checking deployed commit..."
+            git rev-parse HEAD
+            git log -1 --oneline
+
+            echo "3. Installing dependencies..."
+            npm install
+
+            echo "4. Restarting PM2 application..."
+
+            if pm2 describe node-cicd-demo > /dev/null 2>&1; then
+                APP_ENV=main pm2 restart node-cicd-demo --update-env
+            else
+                APP_ENV=main pm2 start node-cicd-demo --update-env
+            fi
+
+
+            echo "feature-1 deployment successful!"
