@@ -6,7 +6,7 @@ on:
       - Dev
       - QA
       - main
-      - feature-1
+      - release-1
 
 jobs:
 
@@ -161,36 +161,36 @@ jobs:
             echo "PRODUCTION deployment successful!"
 
   # =========================
-  # feature-1 DEPLOYMENT
+  # release DEPLOYMENT
   # =========================
-  deploy-prod:
-    if: github.ref == 'refs/heads/main'
+  deploy-preRelease-1:
+    if: github.ref == 'refs/heads/release-1'
     runs-on: ubuntu-latest
 
     environment:
-      name: feature-1
+      name: release-1
 
     steps:
 
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to feature-1
+      - name: Deploy to release-1
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.FE1_EC2_HOST }}
+          host: ${{ secrets.RE1_EC2_HOST }}
           username: ec2-user
-          key: ${{ secrets.FE1_EC2_SSH_KEY }}
+          key: ${{ secrets.RE1_EC2_SSH_KEY }}
 
           script: |
             set -e
 
-            echo "Deploying to feature-1 ..."
+            echo "Deploying to release-1 ..."
 
             cd /home/ec2-user/node-cicd-demo/new-cicd-branch-demo
 
-            git fetch origin feature-1
-            git reset --hard origin/feature-1
+            git fetch origin release-1
+            git reset --hard origin/release-1
             git clean -fd
 
             echo "2. Checking deployed commit..."
@@ -203,10 +203,10 @@ jobs:
             echo "4. Restarting PM2 application..."
 
             if pm2 describe node-cicd-demo > /dev/null 2>&1; then
-                APP_ENV=main pm2 restart node-cicd-demo --update-env
+                APP_ENV=release-1 pm2 restart node-cicd-demo --update-env
             else
-                APP_ENV=main pm2 start node-cicd-demo --update-env
+                APP_ENV=release-1 pm2 start node-cicd-demo --update-env
             fi
 
 
-            echo "feature-1 deployment successful!"
+            echo "release-1 deployment successful!"
