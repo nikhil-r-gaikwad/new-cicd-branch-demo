@@ -1,7 +1,7 @@
 const http = require("http");
 
 const PORT = process.env.PORT || 3000;
-const APP_ENV = process.env.APP_ENV || "PROD";
+const APP_ENV = process.env.APP_ENV || "Dev";
 
 const server = http.createServer((req, res) => {
     res.writeHead(200, {
